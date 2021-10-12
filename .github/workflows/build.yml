@@ -1,0 +1,29 @@
+
+name: Build
+on: [push, pull_request]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:mono-3.3.4
+    steps:
+      - uses: actions/checkout@v2
+      - run: | 
+          mkdir -p .mono/assemblies/
+          nuget restore
+          cp -r /usr/local/bin/GodotSharp/Api/* .mono/assemblies/
+          msbuild Moono.sln
+
+          mkdir export
+
+          mkdir -v -p ~/.local/share/godot/templates
+
+          cp -r /root/.local/share/godot/templates/3.3.4.stable.mono ~/.local/share/godot/templates/3.3.4.stable.mono
+
+          godot --no-window --export linux export/out
+      - name: Upload artifacts
+        uses: 'actions/upload-artifact@v2'
+        with:
+          name: Moono-Linux
+          path: export/out
